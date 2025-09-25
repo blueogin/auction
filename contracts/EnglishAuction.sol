@@ -28,14 +28,14 @@ contract EnglishAuction is ReentrancyGuard {
     IERC721 public immutable nft;
     uint256 public immutable tokenId;
     address public immutable seller;
-    uint256 public immutable reservePrice;
-    uint256 public immutable minIncrement;
+    uint128 public immutable reservePrice;
+    uint128 public immutable minIncrement;
 
     uint64 public startTime;
     uint64 public endTime;
+    bool public settled;
     address public highestBidder;
     uint256 public highestBid;
-    bool public settled;
 
     mapping(address => uint256) public pendingReturns;
 
@@ -43,8 +43,8 @@ contract EnglishAuction is ReentrancyGuard {
         address _seller,
         address _nft,
         uint256 _tokenId,
-        uint256 _reservePrice,
-        uint256 _minIncrement
+        uint128 _reservePrice,
+        uint128 _minIncrement
     ) {
         seller = _seller;
         nft = IERC721(_nft);
@@ -67,7 +67,8 @@ contract EnglishAuction is ReentrancyGuard {
     }
 
     function bid() external payable nonReentrant {
-        if (block.timestamp < startTime || block.timestamp > endTime) revert NotStarted();
+        uint256 ts = block.timestamp;
+        if (ts < startTime || ts > endTime) revert NotStarted();
 
         if (highestBid == 0) {
             if (msg.value < reservePrice) revert BelowReserve();
